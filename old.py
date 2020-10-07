@@ -17,7 +17,7 @@ import string
 
 DIGITS = '0123456789'
 LETTERS = string.ascii_letters
-#new added symbols
+#new symbols
 SYMBOLS = ':;'
 LETTERS_DIGITS = LETTERS + DIGITS + SYMBOLS
 ###
@@ -169,15 +169,24 @@ class Lexer:
 		self.pos = Position(-1, 0, -1, fn, text)
 		self.current_char = None
 		self.advance()
-	
+		#new ** operator
+		self.next()
+		self.next_char = None
+		###
 	def advance(self):
 		self.pos.advance(self.current_char)
 		self.current_char = self.text[self.pos.idx] if self.pos.idx < len(self.text) else None
-
+	#new ** operator
+	def next(self):
+		self.next_char = self.text[self.pos.idx+1] if self.pos.idx+1 < len(self.text) else None
+	###
 	def make_tokens(self):
 		tokens = []
-
+		
 		while self.current_char != None:
+			#new ** operator
+			self.next()
+			###
 			if self.current_char in ' \t':
 				self.advance()
 			elif self.current_char in DIGITS:
@@ -198,11 +207,12 @@ class Lexer:
 				tokens.append(Token(TT_DIV, pos_start=self.pos))
 				self.advance()
 			#new ** operator
-			elif self.current_char == '*' and self.pos.advance() != '*':
-				tokens.append(Token(TT_MUL, pos_start=self.pos))
-				self.advance()
-			elif self.current_char == '*' and self.pos.advance() == '*':
+			elif self.current_char == '*' and self.next_char == '*':
 				tokens.append(Token(TT_POW, pos_start=self.pos))
+				self.advance()
+				self.advance()
+			elif self.current_char == '*' and self.next_char != '*':
+				tokens.append(Token(TT_MUL, pos_start=self.pos))
 				self.advance()
 			##################
 			elif self.current_char == '^':
@@ -432,7 +442,7 @@ class Parser:
 		if not res.error and self.current_tok.type != TT_EOF:
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
-				"Expected '+', '-', '*', '/', '^', '==', '!=', '<', '>', <=', '>=', 'and' or 'or'"
+				"Expected '+', '-', '*', '/', '**', '==', '!=', '<', '>', <=', '>=', 'and' or 'or'"
 			))
 		return res
 
