@@ -1,7 +1,7 @@
 #update: FUN-function, VAR-let, IF-if, ELSE-else, ELIF-elif, AND-and, OR-or, FOR-for,
 #update: WHILE-while, NOT-not, 
 
-#update with system change: ^ - **, THEN-;, STEP-::, TO-:
+#update with system change: ^ - **, THEN-;, STEP-::, TO-:, ->-:
 
 #######################################
 # IMPORTS
@@ -19,8 +19,8 @@ import math
 
 DIGITS = '0123456789'
 LETTERS = string.ascii_letters
-#new added symbols
-SYMBOLS = ':;'
+#new added symbols because all keywords need to be contained in symbol
+SYMBOLS = ';'
 LETTERS_DIGITS = LETTERS + DIGITS + SYMBOLS
 ###
 
@@ -139,8 +139,7 @@ KEYWORDS = [
     'elif',
     'else',
     'for',
-    'to',
-    '::',
+    'step',
     'while',
     'function',
     ';'
@@ -180,6 +179,7 @@ class Lexer:
         #new ** operator
         self.next()
         self.next_char = None
+        self.prev_char = None
         ###
     
     def advance(self):
@@ -189,12 +189,17 @@ class Lexer:
     def next(self):
         self.next_char = self.text[self.pos.idx+1] if self.pos.idx+1 < len(self.text) else None
     ###
+    ### dont change
+    def prev(self):
+        self.prev_char = self.text[self.pos.idx-1] if self.pos.idx-1 < len(self.text) else None
+    ###
     def make_tokens(self):
         tokens = []
 
         while self.current_char != None:
             #new ** operator
             self.next()
+            self.prev()
             ###
             if self.current_char in ' \t':
                 self.advance()
@@ -204,15 +209,16 @@ class Lexer:
                 tokens.append(self.make_identifier())
             elif self.current_char == '"':
                 tokens.append(self.make_string())
-            #new symbol
+           #new symbol
             elif self.current_char in SYMBOLS:
                 tokens.append(self.make_identifier())
             ###
             elif self.current_char == '+':
                 tokens.append(Token(TT_PLUS, pos_start=self.pos))
                 self.advance()
-            elif self.current_char == '-':
-                tokens.append(self.make_minus_or_arrow())
+            elif self.current_char == '-' and self.next_char != '>':
+                tokens.append(Token(TT_MINUS, pos_start=self.pos))
+                self.advance()
             #new ** operator
             elif self.current_char == '*' and self.next_char == '*':
                 tokens.append(Token(TT_POW, pos_start=self.pos))
@@ -246,13 +252,17 @@ class Lexer:
                 tokens.append(token)
             elif self.current_char == '=':
                 tokens.append(self.make_equals())
-            elif self.current_char == '<':
+            elif self.current_char == '<' and self.next_char != '-':
                 tokens.append(self.make_less_than())
-            elif self.current_char == '>':
+            elif self.current_char == '>' and self.prev_char != '-':
                 tokens.append(self.make_greater_than())
             elif self.current_char == ',':
                 tokens.append(Token(TT_COMMA, pos_start=self.pos))
                 self.advance()
+            elif self.current_char == ':':
+                tokens.append(Token(TT_ARROW, pos_start=self.pos, pos_end=self.pos))
+                self.advance()
+            
             else:
                 pos_start = self.pos.copy()
                 char = self.current_char
@@ -314,19 +324,6 @@ class Lexer:
 
         tok_type = TT_KEYWORD if id_str in KEYWORDS else TT_IDENTIFIER
         return Token(tok_type, id_str, pos_start, self.pos)
-
-#tokens.append(self.make_minus_or_arrow())
-#tokens.append(Token(TT_DIV, pos_start=self.pos))
-    def make_minus_or_arrow(self):
-        tok_type = TT_MINUS
-        pos_start = self.pos.copy()
-        self.advance()
-
-        if self.current_char == '>':
-            self.advance()
-            tok_type = TT_ARROW
-
-        return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
 
     def make_not_equals(self):
         pos_start = self.pos.copy()
@@ -877,10 +874,10 @@ class Parser:
         start_value = res.register(self.expr())
         if res.error: return res
 
-        if not self.current_tok.matches(TT_KEYWORD, 'to'):
+        if not self.current_tok.matches(TT_KEYWORD, ';'):
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                f"Expected 'to'"
+                f"Expected ';'"
             ))
         
         res.register_advancement()
@@ -889,7 +886,7 @@ class Parser:
         end_value = res.register(self.expr())
         if res.error: return res
 
-        if self.current_tok.matches(TT_KEYWORD, '::'):
+        if self.current_tok.matches(TT_KEYWORD, 'step'):
             res.register_advancement()
             self.advance()
 
@@ -1011,7 +1008,7 @@ class Parser:
         if self.current_tok.type != TT_ARROW:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                f"Expected '->'"
+                f"Expected ':'"
             ))
 
         res.register_advancement()
