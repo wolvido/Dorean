@@ -1,7 +1,9 @@
 #update: FUN-function, VAR-let, IF-if, ELSE-else, ELIF-elif, AND-and, OR-or, FOR-for,
 #update: WHILE-while, NOT-not, 
 
-#update with system change: ^ - **, THEN-;, STEP-step, TO-;, ->-:
+#update with system change: ^ - **, THEN-;, STEP-shift, TO-to, -> - :
+# dangerous without shift ;
+# try and fix for problem
 
 #######################################
 # IMPORTS
@@ -36,7 +38,7 @@ class Error:
         self.details = details
     
     def as_string(self):
-        result  = f'{self.error_name}: {self.details}\n'
+        result = f'{self.error_name}: {self.details}\n'
         result += f'File {self.pos_start.fn}, line {self.pos_start.ln + 1}'
         result += '\n\n' + string_with_arrows(self.pos_start.ftxt, self.pos_start, self.pos_end)
         return result
@@ -140,10 +142,11 @@ KEYWORDS = [
     'elif',
     'else',
     'for',
-    'step',
+    'shift',
     'while',
     'function',
     ';',
+    'to',
     'end'
 ]
 
@@ -452,11 +455,11 @@ class IfNode:
         self.pos_end = (self.else_case or self.cases[len(self.cases) - 1])[0].pos_end
     
 class ForNode:
-  def __init__(self, var_name_tok, start_value_node, end_value_node, step_value_node, body_node, should_return_null):
+  def __init__(self, var_name_tok, start_value_node, end_value_node, shift_value_node, body_node, should_return_null):
         self.var_name_tok = var_name_tok
         self.start_value_node = start_value_node
         self.end_value_node = end_value_node
-        self.step_value_node = step_value_node
+        self.shift_value_node = shift_value_node
         self.body_node = body_node
         self.should_return_null = should_return_null
 
@@ -915,11 +918,11 @@ class Parser:
         condition = res.register(self.expr())
         if res.error: return res
 
-        if not self.current_tok.matches(TT_KEYWORD, ';'):
+        if not self.current_tok.matches(TT_KEYWORD, 'to'):
             print(TT_KEYWORD)
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                f"Expected ';'"
+                f"Expected 'to'"
             ))
 
         res.register_advancement()
@@ -987,10 +990,10 @@ class Parser:
         start_value = res.register(self.expr())
         if res.error: return res
 
-        if not self.current_tok.matches(TT_KEYWORD, ';'):
+        if not self.current_tok.matches(TT_KEYWORD, 'to'):
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                f"Expected ';'"
+                f"Expected 'to'"
             ))
         
         res.register_advancement()
@@ -999,20 +1002,20 @@ class Parser:
         end_value = res.register(self.expr())
         if res.error: return res
 
-        if self.current_tok.matches(TT_KEYWORD, 'step'):
+        if self.current_tok.matches(TT_KEYWORD, 'shift'):
             res.register_advancement()
             self.advance()
 
-            step_value = res.register(self.expr())
+            shift_value = res.register(self.expr())
             if res.error: return res
         else:
-            step_value = None
+            shift_value = None
 
-        if not self.current_tok.matches(TT_KEYWORD, ';'):
+        if not self.current_tok.matches(TT_KEYWORD, ';'): #then
             print(TT_KEYWORD)
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                f"Expected ';'"
+                f"Expected ';'" #then
             ))
 
         res.register_advancement()
@@ -1034,12 +1037,12 @@ class Parser:
             res.register_advancement()
             self.advance()
 
-            return res.success(ForNode(var_name, start_value, end_value, step_value, body, True))
+            return res.success(ForNode(var_name, start_value, end_value, shift_value, body, True))
 
         body = res.register(self.expr())
         if res.error: return res
 
-        return res.success(ForNode(var_name, start_value, end_value, step_value, body, False))
+        return res.success(ForNode(var_name, start_value, end_value, shift_value, body, False))
 
     def while_expr(self):
         res = ParseResult()
@@ -1056,11 +1059,11 @@ class Parser:
         condition = res.register(self.expr())
         if res.error: return res
 
-        if not self.current_tok.matches(TT_KEYWORD, ';'):
+        if not self.current_tok.matches(TT_KEYWORD, ';'): #then
             print(TT_KEYWORD)
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                f"Expected ';'"
+                f"Expected ';'" #then
             ))
 
         res.register_advancement()
@@ -1079,10 +1082,10 @@ class Parser:
                     f"Expected 'end'"
                 ))
 
-        res.register_advancement()
-        self.advance()
+            res.register_advancement()
+            self.advance()
 
-        return res.success(WhileNode(condition, body, True))
+            return res.success(WhileNode(condition, body, True))
 
         body = res.register(self.expr())
         if res.error: return res
@@ -1930,22 +1933,22 @@ class Interpreter:
         end_value = res.register(self.visit(node.end_value_node, context))
         if res.error: return res
 
-        if node.step_value_node:
-            step_value = res.register(self.visit(node.step_value_node, context))
+        if node.shift_value_node:
+            shift_value = res.register(self.visit(node.shift_value_node, context))
             if res.error: return res
         else:
-            step_value = Number(1)
+            shift_value = Number(1)
 
         i = start_value.value
 
-        if step_value.value >= 0:
+        if shift_value.value >= 0:
             condition = lambda: i < end_value.value
         else:
             condition = lambda: i > end_value.value
         
         while condition():
             context.symbol_table.set(node.var_name_tok.value, Number(i))
-            i += step_value.value
+            i += shift_value.value
 
             elements.append(res.register(self.visit(node.body_node, context)))
             if res.error: return res
