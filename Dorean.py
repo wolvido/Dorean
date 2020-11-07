@@ -1,9 +1,7 @@
 #update: FUN-function, VAR-let, IF-if, ELSE-else, ELIF-elif, AND-and, OR-or, FOR-for,
 #update: WHILE-while, NOT-not, 
-
-#update with system change: ^ - **, THEN-;, STEP-shift, TO-to, -> - :
-# dangerous without shift ;
-# try and fix for problem
+#for loop uses a different then: for loop THEN-; , if else THEN = then
+#update with system change: ^ - **, STEP-shift, TO-to, -> - :
 
 #######################################
 # IMPORTS
@@ -145,8 +143,8 @@ KEYWORDS = [
     'shift',
     'while',
     'function',
-    ';',
     'to',
+    'then',
     'end'
 ]
 
@@ -918,11 +916,11 @@ class Parser:
         condition = res.register(self.expr())
         if res.error: return res
 
-        if not self.current_tok.matches(TT_KEYWORD, 'to'):
+        if not self.current_tok.matches(TT_KEYWORD, 'then'): #temp for if then
             print(TT_KEYWORD)
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                f"Expected 'to'"
+                f"Expected 'then'"
             ))
 
         res.register_advancement()

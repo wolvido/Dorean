@@ -1,7 +1,7 @@
 import Dorean
 
 while True:
-	text = input('Dorean > ')
+	text = input('Dorean> ')
 	result, error = Dorean.run('<stdin>', text)
 
 	if error: print(error.as_string())
