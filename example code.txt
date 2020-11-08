@@ -1,0 +1,39 @@
+variabes:
+let x = 5
+
+comparisons:
+5 == 5
+
+2 + 1 == 3
+
+2 > 3
+
+1 == 1  and 2 == 2
+
+
+if else:
+let height = 180
+let entrance = if height < 180 then "no entrance" else "entrance"
+
+for loop:
+let result = 1
+for i = 1 to 7 ; let result = result * i 
+
+let result = 1
+for i = 6 to 0 shift -1 ; let result = result * i
+
+let i = 0
+while i < 10000 ; let i = i + 1 
+
+string:
+"this is" + "a string"
+
+"string" * 3
+
+functions:
+function add(a,b) : a + b
+add(1,2)
+
+lists:
+[1,2,3,4]
+[1,2] + [3,4]

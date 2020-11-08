@@ -7,7 +7,7 @@
 # IMPORTS
 #######################################
 
-from strings_with_arrows import *
+from mistaken_string_pointer import *
 
 import string
 import os
@@ -145,6 +145,7 @@ KEYWORDS = [
     'function',
     'to',
     'then',
+    ';',
     'end'
 ]
 
@@ -2015,11 +2016,11 @@ global_symbol_table.set("true", Number.true)
 #new overhaul for function names
 global_symbol_table.set("PI", Number.math_PI)
 global_symbol_table.set("print", BuiltInFunction.print)
-global_symbol_table.set("PRINT_RET", BuiltInFunction.print_ret)
-global_symbol_table.set("INPUT", BuiltInFunction.input)
-global_symbol_table.set("INPUT_INT", BuiltInFunction.input_int)
-global_symbol_table.set("CLEAR", BuiltInFunction.clear)
-global_symbol_table.set("CLS", BuiltInFunction.clear)
+global_symbol_table.set("print_ret", BuiltInFunction.print_ret)
+global_symbol_table.set("input", BuiltInFunction.input)
+global_symbol_table.set("input_int", BuiltInFunction.input_int)
+global_symbol_table.set("clear", BuiltInFunction.clear)
+global_symbol_table.set("cls", BuiltInFunction.clear)
 global_symbol_table.set("isInt", BuiltInFunction.is_number)
 global_symbol_table.set("isStr", BuiltInFunction.is_string)
 global_symbol_table.set("isList", BuiltInFunction.is_list)
