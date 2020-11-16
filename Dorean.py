@@ -1,8 +1,3 @@
-#update: FUN-function, VAR-let, IF-if, ELSE-else, ELIF-elif, AND-and, OR-or, FOR-for,
-#update: WHILE-while, NOT-not, 
-#for loop uses a different then: for loop THEN-; , if else THEN = then
-#update with system change: ^ - **, STEP-shift, TO-to, -> - :
-
 #######################################
 # IMPORTS
 #######################################
