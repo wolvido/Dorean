@@ -1,1 +1,1 @@
-"# new-language" 
+Language based on BASIC eritten on python.
