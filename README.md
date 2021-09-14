@@ -1,1 +1,1 @@
-Language based on BASIC eritten on python.
+Language based on BASIC Written on python.
