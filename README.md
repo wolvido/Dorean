@@ -109,8 +109,8 @@ lists:
 
 `let list = [1,2,3]`
 
-append(list,4)
+`append(list,4)`
 
-pop(list,4)
+`pop(list,4)`
 
-extend(list,[4,5,6])
+`extend(list,[4,5,6])`
