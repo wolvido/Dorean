@@ -1,11 +1,9 @@
-Dorean Prgramming Language 
+## Dorean Prgramming Language 
 
-All purpose, high level programming language 
-
+All purpose, high level programming language  
 based on BASIC Written on python 
 
-Sample Codes
-
+### Sample Codes
 **variabes:**
 
 `let x = 5`
